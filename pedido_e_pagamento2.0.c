@@ -503,7 +503,6 @@ void pagamento_dinheiroFisico(){
     }
     if(valor_total > 0){
         qtdCaixaAtual+=qtdRecebida;
-        qtdRecebida = 0;
         printf("Pagamento insuficiente, ainda é necessário pagar R$%0.2f\n", valor_total);
         printf("Retornando ao menu para a efetuação do pagamento do restante...\n");
         metodo_pagamento();
