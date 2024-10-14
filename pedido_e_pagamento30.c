@@ -9,6 +9,7 @@
 float valor_total = 0;
 float qtdCaixaAtual = 200;
 float qtdRecebida;
+int formaPagamento;
 
 // Função para anotar os itens de um novo pedido. Esta é uma função que será chamada em outra função.
 int anotar_pedido(int colunas, int itens_novo_pedido[colunas]){
@@ -34,9 +35,9 @@ int anotar_pedido(int colunas, int itens_novo_pedido[colunas]){
 
     float precos[7] = {40.0, 50.0, 45.0, 47.0, 45.0, 50.0, 55.0}; // vetor dos preços
     int item_opcao, item_quantidade, item_tipo_bebida;
-    float item_valor = 0;
+    float item_valor = 0; //usado para calcular o total do pedido
 
-    // O vetor itens_novo_pedido é o que carregará a quantidade de itens do pedido. Ele tem que ser preenchido com 0 neste momento.
+    // O vetor itens_novo_pedido é o que carregará a quantidade de itens do pedido. Ele tem que ser preenchido com 0 neste momento pois ele está vazio.
     for (int i = 0; i < colunas; i++){
         itens_novo_pedido[i] = 0;
     }
@@ -62,7 +63,11 @@ int anotar_pedido(int colunas, int itens_novo_pedido[colunas]){
         printf("\nDigite o número do item desejado, ou digite 0 para encerrar o pedido: ");
         scanf("%d", &item_opcao);
 
-        item_opcao -=1;
+        if (item_opcao == 0){
+            break;
+        }
+
+        item_opcao -=1; //Serve para aLinhar com o indice do vetor itens_novo_pedido
 
         switch(item_opcao){
                 case 0:
@@ -87,11 +92,6 @@ int anotar_pedido(int colunas, int itens_novo_pedido[colunas]){
                     item_valor += 55.00;
                     break;
             }
-
-        if (item_opcao == -1){
-            break;
-        }
-
 
         if (item_opcao > 12|| item_opcao < -1){
             printf("\nDigite uma opção válida!");
@@ -313,7 +313,7 @@ int alterar_status_pedido(int linhas, int colunas, int matriz_pedidos[linhas][co
     scanf("%d", &id_pedido);
 
     // Se for escolhido um pedido não ativo, isso cancela a função, evitando possíveis erros de lógica futuramente.
-    if (matriz_pedidos[id_pedido][0] == 0){
+    if (mmatriz_pedidos[id_pedido][0] == 0 || id_pedido < 0 || id_pedido > linhas-1){
         printf("\nPedido inválido selecionado! Retornando ao menu inicial.\n");
         return matriz_pedidos;
     }
@@ -348,6 +348,10 @@ int cadastrar_novo_pedido(int linhas, int colunas, int matriz_pedidos[linhas][co
     // Chama a função para mostrar o cardápio e salvar os itens escolhidos. Aqui "colunas" não é subtraido, pois o vetor referenciado já passou por isso.
     anotar_pedido(colunas, itens_novo_pedido);
 
+    if(formaPagamento == 5){
+        return matriz_pedidos;
+    }
+
     // Seleciona um pedido com status "vazio" automaticamente.
     for (i = 0; i < linhas; i++){
         if (matriz_pedidos[i][0] != 0){
@@ -363,7 +367,7 @@ int cadastrar_novo_pedido(int linhas, int colunas, int matriz_pedidos[linhas][co
     if (ID_novo_pedido == 99){
         printf("\nNenhum pedido vazio disponível. O novo pedido será colocado no ID de um pedido 'Entregue', caso haja.");
         for (i = 0; i < linhas; i++){
-            if (matriz_pedidos[i][0] != 2){
+            if (matriz_pedidos[i][0] != 3){
                 continue;
             } else {
                 printf("\nO Pedido será armazenado no ID %d.", i);
@@ -396,17 +400,11 @@ int cadastrar_novo_pedido(int linhas, int colunas, int matriz_pedidos[linhas][co
     printf("\nPedido adicionado!\n");
 
     return matriz_pedidos;
+
 }
 
 void metodo_pagamento()
 {
-    //O software deverá auxiliar o funcionário no controle do caixa, guardando informações sobre a
-    //forma de pagamento e pedido, além de fazer o calculo de troco
-
-    //Essa é uma versão provisória de código, provavelmente vai ser alterado no decorrer do desenvolvimento
-
-    int formaPagamento;
-
         printf("\nO valor total é R$%0.2f.",valor_total);
         printf("\n\nInforme a forma de pagamento:\n1 - Dinheiro Físico\n2 - Pix\n3 - Cartão Débito\n4 - Cartão de Crédito\n5 - Cancelar pagamento e pedido\n");
         printf("Saldo atual no caixa: R$%0.2f\n",qtdCaixaAtual);
@@ -437,7 +435,10 @@ void metodo_pagamento()
                 qtdRecebida = 0;
                 valor_total = 0;
                 printf("Cancelando pagamento e pedido. Retornando ao menu.\n");
-                main();
+                break;
+            default:
+                printf("Dígito inválido.");
+                metodo_pagamento();
                 break;
         }
 }
@@ -490,9 +491,9 @@ void pagamento_dinheiroFisico(){
     printf("Dinheiro físico selecionado, informe a quantia recebida:\n");
 
     scanf("%f",&qtdRecebida);
-    valor_total = valor_total - qtdRecebida;
+    valor_total = valor_total - qtdRecebida; //aqui valor total desempenha o papel de troco
     if(valor_total < 0){
-        qtdCaixaAtual += valor_total;
+        qtdCaixaAtual += valor_total; //entrega o troco para o cliente e decrementa o total do caixa
     }
     if(valor_total > 0){
         qtdCaixaAtual+=qtdRecebida;
@@ -501,11 +502,13 @@ void pagamento_dinheiroFisico(){
         metodo_pagamento();
     }else if(qtdCaixaAtual < 0){
         qtdCaixaAtual+=qtdRecebida;
+        qtdRecebida = 0;
         printf("Não há dinheiro suficiente no caixa, avise ao cliente.\n");
         printf("Obrigado por comprar aqui!\n");
         valor_total = 0;
     }else{
         qtdCaixaAtual+=qtdRecebida;
+        qtdRecebida = 0;
         printf("Troco: R$%0.2f\n", valor_total*(-1));
         printf("Obrigado por comprar aqui!\n");
         valor_total = 0;
@@ -541,13 +544,13 @@ int main() {
             alterar_status_pedido(LINHAS, COLUNAS, matriz_pedidos);
         }
         else if (opcao == 4){
-            exit(0);
+            exit(0); //mesmo papel do break, só que ele para o programa no geral, não somente o laço
         }
         else {
             printf("Opção inválida!\n");
         }
 
-        getchar();
+        getchar(); //basicamente espera um input para prosseguir com a execução, sem se preocupar com o que ele seja 
         printf("\nAperte ENTER para prosseguir.");
         getchar();
     }
