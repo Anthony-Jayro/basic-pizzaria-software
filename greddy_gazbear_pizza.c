@@ -11,6 +11,192 @@ float qtdCaixaAtual = 200;
 float qtdRecebida;
 int formaPagamento;
 
+void confirmar_pagamento();
+
+void pagamento_cartaoCredito ();
+
+void pagamento_dinheiroFisico();
+
+void metodo_pagamento();
+
+int anotar_pedido(int colunas, int itens_novo_pedido[colunas]);
+
+void escrever_itens(int colunas, int itens_pedido[colunas]);
+
+void listar_pedidos(int linhas, int colunas, int matriz_pedidos[linhas][colunas]);
+
+int alterar_status_pedido(int linhas, int colunas, int matriz_pedidos[linhas][colunas]);
+
+int cadastrar_novo_pedido(int linhas, int colunas, int matriz_pedidos[linhas][colunas]);
+
+int main() {
+    setlocale(LC_ALL, "Portuguese");
+
+    // Constantes
+    int const LINHAS = 15, COLUNAS = 20;
+
+    // Variáveis
+    int matriz_pedidos[15][20] = {{0}};
+    int opcao;
+    char ENTER; // Variável para um "pause" durante o fim da execução dos comandos.
+
+    while(1){
+        //Limpar terminal de acordo com o SO. 
+        #if defined(_WIN32) || defined(_WIN64)  
+            system("cls");  
+        #else defined(__linux__) || defined(__unix__)  
+            system("clear");  
+        #endif
+        
+        printf(" _______  ______    _______  ______   ______   __   __    _______  _______  _______  _______  _______  _______  ______\n");  
+        printf("|       ||    _ |  |       ||      | |      | |  | |  |  |       ||   _   ||       ||  _    ||       ||   _   ||    _ |\n");  
+        printf("|    ___||   | ||  |    ___||  _    ||  _    ||  |_|  |  |    ___||  |_|  ||____   || |_|   ||    ___||  |_|  ||   | ||\n");  
+        printf("|   | __ |   |_||_ |   |___ | | |   || | |   ||       |  |   | __ |       | ____|  ||       ||   |___ |       ||   |_||_\n");
+        printf("|   ||  ||    __  ||    ___|| |_|   || |_|   ||_     _|  |   ||  ||       || ______||  _   | |    ___||       ||    __  |\n");
+        printf("|   |_| ||   |  | ||   |___ |       ||       |  |   |    |   |_| ||   _   || |_____ | |_|   ||   |___ |   _   ||   |  | |\n");
+        printf("|_______||___|  |_||_______||______| |______|   |___|    |_______||__| |__||_______||_______||_______||__| |__||___|  |_|");
+        
+        printf("\n\n====================== MENU GREDDY GAZBEAR'S PIZZA ======================\n");
+        printf("\n1 - Anotar Pedido");
+        printf("\n2 - Listar Pedidos");
+        printf("\n3 - Alterar Status do Pedido");
+        printf("\n4 - Sair\n: ");
+        scanf("%d", &opcao);
+
+        if (opcao == 1){
+            cadastrar_novo_pedido(LINHAS, COLUNAS, matriz_pedidos);
+        }
+        else if (opcao == 2) {
+            listar_pedidos(LINHAS, COLUNAS, matriz_pedidos);
+        }
+        else if (opcao == 3){
+            alterar_status_pedido(LINHAS, COLUNAS, matriz_pedidos);
+        }
+        else if (opcao == 4){
+            exit(0); //mesmo papel do break, só que ele para o programa no geral, não somente o laço
+        }
+        else {
+            printf("Opção inválida!\n");
+        }
+
+        getchar(); //basicamente espera um input para prosseguir com a execução, sem se preocupar com o que ele seja 
+        printf("\nAperte ENTER para prosseguir.");
+        getchar();
+    }
+}
+
+void confirmar_pagamento() {
+
+    int escolha;
+
+    printf("Verifique a maquininha.\nSe o pagamento for autorizado, tecle 1.\nSe não for autorizado, tecle 2\n");
+    scanf("%d", &escolha);
+    if(escolha == 1) {
+        printf("Pagamento confirmado!\nretornando ao menu...\n");
+        qtdCaixaAtual+=valor_total;
+        valor_total = 0;
+        qtdRecebida = 0;
+    }
+    else{
+        printf("Pagamento não confirmado!\nretornando ao menu do pagamento...\n");
+        metodo_pagamento();
+    }
+
+}
+
+void pagamento_cartaoCredito () {
+
+    int escolha;
+    float valorParcela, qtdParcelas, taxaMaquina = valor_total * 0.03 ;
+
+        printf("Elo crédito selecionado, informe quantas vezes deseja parcelar:\n");
+        scanf("%f",&qtdParcelas);
+        valorParcela = (valor_total+taxaMaquina)/qtdParcelas;
+        printf("O valor da parcela é %0.2f\nDeseja continuar?\n 1 - Sim\n 2 - Não\n", valorParcela);
+        scanf("%d", &escolha);
+        if(escolha == 1) {
+            confirmar_pagamento();
+        }
+        else if (escolha == 2){
+            printf("Retornando ao menu do pagamento...");
+            metodo_pagamento();
+        }else{
+            printf("Dígito incorreto. Retornando ao menu do pagamento...");
+            metodo_pagamento();
+        }
+    }
+
+
+void pagamento_dinheiroFisico(){
+
+    printf("Dinheiro físico selecionado, informe a quantia recebida:\n");
+
+    scanf("%f",&qtdRecebida);
+    valor_total = valor_total - qtdRecebida; //aqui valor total desempenha o papel de troco
+    if(valor_total < 0){
+        qtdCaixaAtual += valor_total; //entrega o troco para o cliente e decrementa o total do caixa
+    }
+    if(valor_total > 0){
+        qtdCaixaAtual+=qtdRecebida;
+        printf("Pagamento insuficiente, ainda é necessário pagar R$%0.2f\n", valor_total);
+        printf("Retornando ao menu para a efetuação do pagamento do restante...\n");
+        metodo_pagamento();
+    }else if(qtdCaixaAtual < 0){
+        qtdCaixaAtual+=qtdRecebida;
+        qtdRecebida = 0;
+        printf("Não há dinheiro suficiente no caixa, avise ao cliente.\n");
+        printf("Obrigado por comprar aqui!\n");
+        valor_total = 0;
+    }else{
+        qtdCaixaAtual+=qtdRecebida;
+        qtdRecebida = 0;
+        printf("Troco: R$%0.2f\n", valor_total*(-1));
+        printf("Obrigado por comprar aqui!\n");
+        valor_total = 0;
+        }
+}
+
+
+void metodo_pagamento()
+{
+        printf("\nO valor total é R$%0.2f.",valor_total);
+        printf("\n\nInforme a forma de pagamento:\n1 - Dinheiro Físico\n2 - Pix\n3 - Cartão Débito\n4 - Cartão de Crédito\n5 - Cancelar pagamento e pedido\n");
+        printf("Saldo atual no caixa: R$%0.2f\n",qtdCaixaAtual);
+        scanf("%d",&formaPagamento);
+
+        switch (formaPagamento) {
+            case 1:
+                pagamento_dinheiroFisico();
+                break;
+
+            case 2:
+                printf("Pix selecionado, exibindo chave pix...\n");
+                confirmar_pagamento();
+                break;
+
+            case 3:
+                printf("Elo débito selecionado, insira ou aproxime o cartão...");
+                confirmar_pagamento();
+                break;
+
+
+            case 4:
+                pagamento_cartaoCredito();
+                break;
+
+            case 5:
+                qtdCaixaAtual -= qtdRecebida;
+                qtdRecebida = 0;
+                valor_total = 0;
+                printf("Cancelando pagamento e pedido. Retornando ao menu.\n");
+                break;
+            default:
+                printf("Dígito inválido.");
+                metodo_pagamento();
+                break;
+        }
+}
+
 // Função para anotar os itens de um novo pedido. Esta é uma função que será chamada em outra função.
 int anotar_pedido(int colunas, int itens_novo_pedido[colunas]){
     char pizzas[7][50] = { // matriz das pizzas
@@ -313,7 +499,7 @@ int alterar_status_pedido(int linhas, int colunas, int matriz_pedidos[linhas][co
     scanf("%d", &id_pedido);
 
     // Se for escolhido um pedido não ativo, isso cancela a função, evitando possíveis erros de lógica futuramente.
-    if (mmatriz_pedidos[id_pedido][0] == 0 || id_pedido < 0 || id_pedido > linhas-1){
+    if (matriz_pedidos[id_pedido][0] == 0 || id_pedido < 0 || id_pedido > linhas-1){
         printf("\nPedido inválido selecionado! Retornando ao menu inicial.\n");
         return matriz_pedidos;
     }
@@ -401,157 +587,4 @@ int cadastrar_novo_pedido(int linhas, int colunas, int matriz_pedidos[linhas][co
 
     return matriz_pedidos;
 
-}
-
-void metodo_pagamento()
-{
-        printf("\nO valor total é R$%0.2f.",valor_total);
-        printf("\n\nInforme a forma de pagamento:\n1 - Dinheiro Físico\n2 - Pix\n3 - Cartão Débito\n4 - Cartão de Crédito\n5 - Cancelar pagamento e pedido\n");
-        printf("Saldo atual no caixa: R$%0.2f\n",qtdCaixaAtual);
-        scanf("%d",&formaPagamento);
-
-        switch (formaPagamento) {
-            case 1:
-                pagamento_dinheiroFisico();
-                break;
-
-            case 2:
-                printf("Pix selecionado, exibindo chave pix...\n");
-                confirmar_pagamento();
-                break;
-
-            case 3:
-                printf("Elo débito selecionado, insira ou aproxime o cartão...");
-                confirmar_pagamento();
-                break;
-
-
-            case 4:
-                pagamento_cartaoCredito();
-                break;
-
-            case 5:
-                qtdCaixaAtual -= qtdRecebida;
-                qtdRecebida = 0;
-                valor_total = 0;
-                printf("Cancelando pagamento e pedido. Retornando ao menu.\n");
-                break;
-            default:
-                printf("Dígito inválido.");
-                metodo_pagamento();
-                break;
-        }
-}
-
-void confirmar_pagamento() {
-
-    int escolha;
-
-    printf("Verifique a maquininha.\nSe o pagamento for autorizado, tecle 1.\nSe não for autorizado, tecle 2\n");
-    scanf("%d", &escolha);
-    if(escolha == 1) {
-        printf("Pagamento confirmado!\nretornando ao menu...\n");
-        qtdCaixaAtual+=valor_total;
-        valor_total = 0;
-        qtdRecebida = 0;
-    }
-    else{
-        printf("Pagamento não confirmado!\nretornando ao menu do pagamento...\n");
-        metodo_pagamento();
-    }
-
-}
-
-
-void pagamento_cartaoCredito () {
-
-    int escolha;
-    float valorParcela, qtdParcelas, taxaMaquina = valor_total * 0.03 ;
-
-        printf("Elo crédito selecionado, informe quantas vezes deseja parcelar:\n");
-        scanf("%f",&qtdParcelas);
-        valorParcela = (valor_total+taxaMaquina)/qtdParcelas;
-        printf("O valor da parcela é %0.2f\nDeseja continuar?\n 1 - Sim\n 2 - Não\n", valorParcela);
-        scanf("%d", &escolha);
-        if(escolha == 1) {
-            confirmar_pagamento();
-        }
-        else if (escolha == 2){
-            printf("Retornando ao menu do pagamento...");
-            metodo_pagamento();
-        }else{
-            printf("Dígito incorreto. Retornando ao menu do pagamento...");
-            metodo_pagamento();
-        }
-    }
-
-
-void pagamento_dinheiroFisico(){
-
-    printf("Dinheiro físico selecionado, informe a quantia recebida:\n");
-
-    scanf("%f",&qtdRecebida);
-    valor_total = valor_total - qtdRecebida; //aqui valor total desempenha o papel de troco
-    if(valor_total < 0){
-        qtdCaixaAtual += valor_total; //entrega o troco para o cliente e decrementa o total do caixa
-    }
-    if(valor_total > 0){
-        qtdCaixaAtual+=qtdRecebida;
-        printf("Pagamento insuficiente, ainda é necessário pagar R$%0.2f\n", valor_total);
-        printf("Retornando ao menu para a efetuação do pagamento do restante...\n");
-        metodo_pagamento();
-    }else if(qtdCaixaAtual < 0){
-        qtdCaixaAtual+=qtdRecebida;
-        qtdRecebida = 0;
-        printf("Não há dinheiro suficiente no caixa, avise ao cliente.\n");
-        printf("Obrigado por comprar aqui!\n");
-        valor_total = 0;
-    }else{
-        qtdCaixaAtual+=qtdRecebida;
-        qtdRecebida = 0;
-        printf("Troco: R$%0.2f\n", valor_total*(-1));
-        printf("Obrigado por comprar aqui!\n");
-        valor_total = 0;
-        }
-}
-
-int main() {
-    setlocale(LC_ALL, "Portuguese");
-
-    // Constantes
-    int const LINHAS = 15, COLUNAS = 20;
-
-    // Variáveis
-    int matriz_pedidos[15][20] = {{0}};
-    int opcao;
-    char ENTER; // Variável para um "pause" durante o fim da execução dos comandos.
-
-    while(1){
-        printf("\n====================== MENU GREDDY GAZBEAR'S PIZZA ======================\n");
-        printf("\n1 - Anotar Pedido");
-        printf("\n2 - Listar Pedidos");
-        printf("\n3 - Alterar Status do Pedido");
-        printf("\n4 - Sair\n: ");
-        scanf("%d", &opcao);
-
-        if (opcao == 1){
-            cadastrar_novo_pedido(LINHAS, COLUNAS, matriz_pedidos);
-        }
-        else if (opcao == 2) {
-            listar_pedidos(LINHAS, COLUNAS, matriz_pedidos);
-        }
-        else if (opcao == 3){
-            alterar_status_pedido(LINHAS, COLUNAS, matriz_pedidos);
-        }
-        else if (opcao == 4){
-            exit(0); //mesmo papel do break, só que ele para o programa no geral, não somente o laço
-        }
-        else {
-            printf("Opção inválida!\n");
-        }
-
-        getchar(); //basicamente espera um input para prosseguir com a execução, sem se preocupar com o que ele seja 
-        printf("\nAperte ENTER para prosseguir.");
-        getchar();
-    }
 }
